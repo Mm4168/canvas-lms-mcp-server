@@ -1,31 +1,21 @@
 import { EventEmitter } from 'events';
-import { v4 as uuidv4 } from 'uuid';
-import config from '../config';
-import logger from '../utils/logger';
+import { Response } from 'express';
+import config from './config';
+import logger from './logger';
+// ... rest of imports
 import {
   MCPMessage,
   MCPRequest,
   MCPResponse,
   MCPNotification,
-  MCPError,
-  MCPMethod,
-  MCPErrorCode,
-  MCPInitializeParams,
-  MCPInitializeResult,
   MCPTool,
-  MCPToolCall,
   MCPToolResult,
-  MCPResource,
-  MCPResourceContents,
   MCPPrompt,
-  MCPPromptMessage,
-  SSEConnection,
-  SSEMessage,
-  MCPContent,
-  MCPTextContent
-} from '../types/mcp';
-import { CanvasAPIClient } from './canvasClient';
-import { CanvasToolRegistry } from './canvasTools';
+  MCPResource,
+  MCPErrorCode,
+  MCPConnection,
+  MCPServerCapabilities
+} from './mcp';
 
 export class MCPHandler extends EventEmitter {
   private connections: Map<string, SSEConnection> = new Map();
