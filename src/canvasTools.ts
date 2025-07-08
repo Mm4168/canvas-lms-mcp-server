@@ -1,4 +1,10 @@
-import { MCPTool, MCPToolResult, MCPPrompt, MCPMessage, MCPErrorCode } from './types/mcp';
+import {
+  MCPTool,
+  MCPToolResult,
+  MCPPrompt,
+  MCPMessage,
+  MCPErrorCode
+} from './types/mcp';
 import { CanvasAPIClient } from './canvasClient';
 import logger from './utils/logger';
 
