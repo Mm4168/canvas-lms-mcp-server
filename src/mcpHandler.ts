@@ -1,8 +1,9 @@
 import { EventEmitter } from 'events';
 import { Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import config from './config/index';
 import logger from './utils/logger';
-// ... rest of imports
+import { CanvasToolRegistry } from './canvasTools';
 import {
   MCPMessage,
   MCPRequest,
@@ -13,9 +14,14 @@ import {
   MCPPrompt,
   MCPResource,
   MCPErrorCode,
-  MCPConnection,
-  MCPServerCapabilities
-} from './mcp';
+  MCPServerCapabilities,
+  SSEConnection,
+  SSEMessage,
+  MCPMethod,
+  MCPInitializeParams,
+  MCPInitializeResult
+} from './types/mcp';
+import { CanvasAPIClient } from './canvasClient';
 
 export class MCPHandler extends EventEmitter {
   private connections: Map<string, SSEConnection> = new Map();
