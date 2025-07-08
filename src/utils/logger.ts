@@ -1,6 +1,5 @@
+import winston from 'winston';
 import config from './config';
-import logger from './logger';
-import { CanvasAPIResponse, CanvasCourse, CanvasUser, CanvasAssignment } from './canvas';
 
 // Define log levels
 const levels = {
