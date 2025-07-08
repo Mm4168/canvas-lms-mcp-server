@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
-import config from './config';
-import logger from './logger';
+import config from './config/index';
+import logger from './utils/logger';
 import {
   CanvasAPIResponse,
   CanvasCourse,
