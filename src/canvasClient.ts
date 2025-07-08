@@ -1,18 +1,16 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import config from '../config';
-import logger from '../utils/logger';
+import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import config from './config';
+import logger from './logger';
 import {
   CanvasAPIResponse,
-  CanvasUser,
   CanvasCourse,
+  CanvasUser,
   CanvasAssignment,
   CanvasSubmission,
-  CanvasEnrollment,
   CanvasFile,
-  CanvasError,
-  CanvasAccessToken,
+  CanvasEnrollment,
   CanvasPaginationLinks
-} from '../types/canvas';
+} from './canvas';
 
 export class CanvasAPIClient {
   private client: AxiosInstance;
