@@ -15,7 +15,7 @@ import {
   MCPErrorCode,
   MCPConnection,
   MCPServerCapabilities
-} from './mcp';
+} from './types/mcp';
 
 export class MCPHandler extends EventEmitter {
   private connections: Map<string, SSEConnection> = new Map();
