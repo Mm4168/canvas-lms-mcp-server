@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { Response } from 'express';
-import config from './config';
-import logger from './logger';
+import config from './config/index';
+import logger from './utils/logger';
 // ... rest of imports
 import {
   MCPMessage,
