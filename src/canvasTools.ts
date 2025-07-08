@@ -1,12 +1,6 @@
-import {
-  MCPTool,
-  MCPToolResult,
-  MCPPrompt,
-  MCPMessage,
-  MCPErrorCode
-} from './mcp';
+import { MCPTool, MCPToolResult, MCPPrompt, MCPMessage, MCPErrorCode } from './types/mcp';
 import { CanvasAPIClient } from './canvasClient';
-import logger from './logger';
+import logger from './utils/logger';
 
 export class CanvasToolRegistry {
   private tools: Map<string, MCPTool> = new Map();
