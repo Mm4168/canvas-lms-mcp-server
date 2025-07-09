@@ -172,10 +172,12 @@ export class MCPHandler extends EventEmitter {
     const connection = this.connections.get(connectionId);
     if (!connection) {
       logger.warn(`Received message for unknown connection: ${connectionId}`);
+      logger.warn(`Available connections: ${Array.from(this.connections.keys()).join(', ')}`);
       return;
     }
 
     connection.lastActivity = new Date();
+    logger.debug(`Handling message for connection ${connectionId}, authenticated: ${connection.authenticated}`);
 
     try {
       const message: MCPMessage = JSON.parse(messageData);
@@ -291,6 +293,7 @@ export class MCPHandler extends EventEmitter {
   private async handleInitialized(connection: SSEConnection, request: MCPRequest): Promise<void> {
     connection.authenticated = true;
     logger.info(`Connection ${connection.id} is now initialized and ready`);
+    logger.info(`Connection authenticated status: ${connection.authenticated}`);
   }
 
   private async handlePing(connection: SSEConnection, request: MCPRequest): Promise<void> {
@@ -304,6 +307,7 @@ export class MCPHandler extends EventEmitter {
   }
 
   private async handleToolsList(connection: SSEConnection, request: MCPRequest): Promise<void> {
+    logger.debug(`Tools list requested for connection ${connection.id}, authenticated: ${connection.authenticated}`);
     if (!connection.authenticated) {
       this.sendError(connection, request.id, MCPErrorCode.AUTHENTICATION_ERROR, 'Connection not authenticated');
       return;
