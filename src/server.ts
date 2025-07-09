@@ -38,7 +38,7 @@ app.get('/mcp', (req, res) => {
 });
 
 // Receive messages
-app.post('/mcp', express.text({ type: '*/*' }), async (req, res) => {
+app.post('/mcp', async (req, res) => {
   const connectionId = req.query.id as string;
   if (!connectionId) {
     res.status(400).send('Missing id');
@@ -46,7 +46,9 @@ app.post('/mcp', express.text({ type: '*/*' }), async (req, res) => {
   }
   
   try {
-    await mcpHandler.handleMessage(connectionId, req.body as string);
+    // Convert the JSON body to string for the handler
+    const messageData = JSON.stringify(req.body);
+    await mcpHandler.handleMessage(connectionId, messageData);
     res.sendStatus(200);
   } catch (error) {
     logger.error('Error handling MCP message:', error);
