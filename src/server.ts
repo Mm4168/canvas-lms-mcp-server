@@ -32,7 +32,8 @@ const mcpHandler = new MCPHandler();
 
 // Establish a Server-Sent Events stream
 app.get('/mcp', (req, res) => {
-  const connectionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  // Allow client to specify their own connection ID or generate one
+  const connectionId = (req.query.id as string) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   mcpHandler.addConnection(connectionId, res);
 });
 

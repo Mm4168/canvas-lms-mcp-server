@@ -102,6 +102,7 @@ export class MCPHandler extends EventEmitter {
       params: {
         level: 'info',
         message: 'Connected to Canvas LMS MCP Server',
+        connectionId: connectionId,
       },
     });
 
