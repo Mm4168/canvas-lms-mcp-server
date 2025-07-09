@@ -13,15 +13,15 @@ RUN npm install && npm cache clean --force
 # Copy source code
 COPY . .
 
-# Build TypeScript
-RUN npm run build
+# Build TypeScript (ensure compiler script is executable first)
+RUN chmod +x node_modules/.bin/* && npx tsc
 
 # Remove dev dependencies after build
 RUN npm prune --production
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+RUN adduser  -S nodejs -u 1001
 
 # Change ownership of app directory
 RUN chown -R nodejs:nodejs /app
@@ -32,7 +32,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http' ).get('http://localhost:8080/health', (res ) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD node -e "require('http').get('http://localhost:8080/health', res => process.exit(res.statusCode === 200 ? 0 : 1))"
 
 # Start application
 CMD ["npm", "start"]
