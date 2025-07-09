@@ -41,6 +41,22 @@ app.post('/mcp', express.text({ type: '*/*' }), async (req, res) => {
 });
 
 // Start server
-app.listen(Number(port), () => {
-  logger.info(`Canvas-MCP server listening on ${port}`);
+const server = app.listen(Number(port), '0.0.0.0', () => {
+  logger.info(`Canvas-MCP server listening on 0.0.0.0:${port}`);
+  logger.info(`Health check available at http://0.0.0.0:${port}/health`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  logger.error('Server error:', error);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    logger.info('HTTP server closed');
+    process.exit(0);
+  });
 });
