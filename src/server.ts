@@ -1,10 +1,23 @@
 import express from 'express';
+import cors from 'cors';
 import config from './index';
 import logger from './utils/logger';
 import MCPHandler from './mcpHandler';
 
 const app = express();
 const port = process.env.PORT || '8080';
+
+// CORS configuration
+const corsOptions = {
+  origin: true, // Allow all origins in development, configure specific origins for production
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Last-Event-ID'],
+  exposedHeaders: ['Content-Type'],
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
 // Basic middleware
 app.use(express.json());

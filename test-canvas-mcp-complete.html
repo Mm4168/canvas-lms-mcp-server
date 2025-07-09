@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Canvas MCP Test - Complete</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .section {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .sent {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        .received {
+            background-color: #f1f8e9;
+            border-left: 4px solid #8bc34a;
+        }
+        .error {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+        #status {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .connected {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        .disconnected {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+        .tools-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .tool-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        .tool-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .tool-description {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Canvas LMS MCP Server Test - Complete</h1>
+    
+    <div id="status" class="disconnected">Connecting...</div>
+    
+    <div class="container">
+        <div class="section">
+            <h2>Controls</h2>
+            <div>
+                <h3>1. Initialize Connection</h3>
+                <button id="initBtn" onclick="sendInit()">Initialize</button>
+                <button id="initializedBtn" onclick="sendInitialized()" disabled>Send Initialized</button>
+            </div>
+            
+            <div>
+                <h3>2. Discover Tools</h3>
+                <button id="toolsBtn" onclick="listTools()" disabled>List Canvas Tools</button>
+                <button id="promptsBtn" onclick="listPrompts()" disabled>List Prompts</button>
+            </div>
+            
+            <div>
+                <h3>3. Test Canvas (Requires Token)</h3>
+                <input type="text" id="canvasToken" placeholder="Enter Canvas Access Token" style="width: 100%; margin: 5px 0; padding: 5px;">
+                <button onclick="testCanvasAuth()" disabled id="testAuthBtn">Test Authentication</button>
+                <button onclick="getCourses()" disabled id="getCoursesBtn">Get My Courses</button>
+            </div>
+            
+            <div>
+                <h3>Connection Info</h3>
+                <p>Connection ID: <code id="connectionId"></code></p>
+                <p>Server URL: <code>https://canvas-lms-mcp-server-462819933129.us-west1.run.app</code></p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Messages</h2>
+            <button onclick="clearMessages()">Clear</button>
+            <div id="messages"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Canvas Tools</h2>
+            <div id="tools" class="tools-list">
+                <p style="color: #666;">Tools will appear here after initialization...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource;
+        const connectionId = 'browser-test-' + Date.now();
+        let isInitialized = false;
+        let messageId = 1;
+        
+        document.getElementById('connectionId').textContent = connectionId;
+        
+        function connect() {
+            eventSource = new EventSource('https://canvas-lms-mcp-server-462819933129.us-west1.run.app/mcp');
+            
+            eventSource.onopen = () => {
+                updateStatus('Connected', true);
+                addMessage('Connected to SSE stream', 'received');
+            };
+            
+            eventSource.onerror = (error) => {
+                updateStatus('Connection error', false);
+                addMessage('SSE Error: ' + JSON.stringify(error), 'error');
+            };
+            
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    addMessage('Received: ' + JSON.stringify(data, null, 2), 'received');
+                    
+                    // Handle different message types
+                    if (data.id && data.result) {
+                        // This is a response to our request
+                        handleResponse(data);
+                    } else if (data.method) {
+                        // This is a notification or request from server
+                        handleNotification(data);
+                    }
+                } catch (e) {
+                    addMessage('Parse error: ' + e.message + '\nData: ' + event.data, 'error');
+                }
+            };
+        }
+        
+        function handleResponse(data) {
+            if (data.result.protocolVersion) {
+                // Initialize response
+                addMessage('✅ Initialization successful! Protocol: ' + data.result.protocolVersion, 'received');
+                document.getElementById('initializedBtn').disabled = false;
+            } else if (data.result.tools) {
+                // Tools list response
+                displayTools(data.result.tools);
+                addMessage('✅ Received ' + data.result.tools.length + ' Canvas tools', 'received');
+            } else if (data.result.prompts) {
+                // Prompts list response
+                addMessage('✅ Received ' + data.result.prompts.length + ' prompts', 'received');
+            } else if (data.result.content) {
+                // Tool execution response
+                addMessage('✅ Tool execution result: ' + JSON.stringify(data.result.content, null, 2), 'received');
+            }
+        }
+        
+        function handleNotification(data) {
+            if (data.method === 'notifications/message') {
+                addMessage('📢 Server: ' + data.params.message, 'received');
+            } else if (data.method === 'notifications/ping') {
+                // Heartbeat - don't clutter the UI
+                console.log('Heartbeat:', data.params.timestamp);
+            }
+        }
+        
+        function displayTools(tools) {
+            const toolsDiv = document.getElementById('tools');
+            toolsDiv.innerHTML = '<h3>Available Canvas Tools (' + tools.length + ')</h3>';
+            
+            tools.forEach(tool => {
+                const toolDiv = document.createElement('div');
+                toolDiv.className = 'tool-item';
+                toolDiv.innerHTML = `
+                    <div class="tool-name">${tool.name}</div>
+                    <div class="tool-description">${tool.description}</div>
+                `;
+                toolsDiv.appendChild(toolDiv);
+            });
+        }
+        
+        function updateStatus(text, isConnected) {
+            const status = document.getElementById('status');
+            status.textContent = text;
+            status.className = isConnected ? 'connected' : 'disconnected';
+        }
+        
+        function addMessage(text, type = 'received') {
+            const messages = document.getElementById('messages');
+            const message = document.createElement('div');
+            message.className = 'message ' + type;
+            message.textContent = text;
+            messages.insertBefore(message, messages.firstChild);
+        }
+        
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+        
+        async function sendRequest(method, params = {}) {
+            const request = {
+                jsonrpc: '2.0',
+                id: messageId++,
+                method: method,
+                params: params
+            };
+            
+            addMessage('Sending: ' + JSON.stringify(request, null, 2), 'sent');
+            
+            try {
+                const response = await fetch(`https://canvas-lms-mcp-server-462819933129.us-west1.run.app/mcp?id=${connectionId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                addMessage('✓ Request sent successfully', 'sent');
+            } catch (error) {
+                addMessage('❌ Send error: ' + error.message, 'error');
+            }
+        }
+        
+        async function sendNotification(method, params = {}) {
+            const notification = {
+                jsonrpc: '2.0',
+                method: method,
+                params: params
+            };
+            
+            addMessage('Sending notification: ' + JSON.stringify(notification, null, 2), 'sent');
+            
+            try {
+                const response = await fetch(`https://canvas-lms-mcp-server-462819933129.us-west1.run.app/mcp?id=${connectionId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(notification)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                addMessage('✓ Notification sent', 'sent');
+            } catch (error) {
+                addMessage('❌ Send error: ' + error.message, 'error');
+            }
+        }
+        
+        function sendInit() {
+            sendRequest('initialize', {
+                protocolVersion: '2025-06-18',
+                clientInfo: {
+                    name: 'Browser Test Client',
+                    version: '1.0.0'
+                },
+                capabilities: {}
+            });
+        }
+        
+        function sendInitialized() {
+            sendNotification('notifications/initialized');
+            isInitialized = true;
+            document.getElementById('toolsBtn').disabled = false;
+            document.getElementById('promptsBtn').disabled = false;
+            document.getElementById('testAuthBtn').disabled = false;
+            document.getElementById('getCoursesBtn').disabled = false;
+            addMessage('✅ Connection fully initialized! You can now use Canvas tools.', 'received');
+        }
+        
+        function listTools() {
+            sendRequest('tools/list');
+        }
+        
+        function listPrompts() {
+            sendRequest('prompts/list');
+        }
+        
+        function testCanvasAuth() {
+            const token = document.getElementById('canvasToken').value;
+            if (!token) {
+                alert('Please enter your Canvas access token first');
+                return;
+            }
+            
+            sendRequest('tools/call', {
+                name: 'get_current_user',
+                arguments: {
+                    access_token: token
+                }
+            });
+        }
+        
+        function getCourses() {
+            const token = document.getElementById('canvasToken').value;
+            if (!token) {
+                alert('Please enter your Canvas access token first');
+                return;
+            }
+            
+            sendRequest('tools/call', {
+                name: 'get_courses',
+                arguments: {
+                    access_token: token,
+                    enrollment_state: 'active'
+                }
+            });
+        }
+        
+        // Connect on load
+        connect();
+    </script>
+</body>
+</html> 
