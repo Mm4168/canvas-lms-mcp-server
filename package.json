@@ -2,11 +2,11 @@
   "name": "canvas-lms-mcp-server",
   "version": "1.0.0",
   "description": "Canvas LMS Model Context Protocol (MCP) Server for n8n AI-Agent Workflows",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "nodemon --exec ts-node src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
